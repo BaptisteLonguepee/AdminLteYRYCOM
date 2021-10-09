@@ -1,0 +1,50 @@
+version: "3"
+
+services:
+    mysql:
+        image: mysql:8.0.19
+        networks:
+            - my-network
+        environment:
+            MYSQL_ROOT_PASSWORD: my-secret-pw
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:5.0.2
+        networks:
+            - my-network
+        ports:
+            - "8080:80"
+        environment:
+            PMA_HOST: mysql
+        depends_on:
+            - mysql
+
+
+    nginx:
+        image: nginx:${NGINX_VERSION}
+        container_name: ${LAMP_DOCKER_NAME}_nginx
+        volumes:
+            - "../:/usr/share/nginx/html"
+            - "../log:/var/log/nginx"
+            - "./nginx.conf:/etc/nginx/nginx.conf:ro"
+        ports:
+            - "${NGINX_PORT}:80"
+        depends_on:
+            - php
+
+    php:
+        build:
+            context: .
+            dockerfile: dockerfilephp
+        container_name: ${LAMP_DOCKER_NAME}_php
+        volumes:
+            - "../:/usr/share/nginx/html"
+            - "./php.ini:/usr/local/etc/php/php.ini"
+        depends_on:
+            - mysql
+
+networks:
+    my-network:
+
+
+
